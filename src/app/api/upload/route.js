@@ -85,7 +85,7 @@ export async function POST(request) {
     }
 
     // ==========================================
-    // 5. Send PDF to FastAPI
+    // 5. Send PDF to deployed FastAPI backend
     // ==========================================
 
     const aiFormData = new FormData()
@@ -102,7 +102,7 @@ export async function POST(request) {
 
     try {
       aiResponse = await fetch(
-        'http://127.0.0.1:8000/generate-course',
+        'https://pdf-course-app.onrender.com/generate-course',
         {
           method: 'POST',
           body: aiFormData,
@@ -115,7 +115,7 @@ export async function POST(request) {
         {
           success: false,
           error:
-            'Could not connect to FastAPI. Make sure the backend server is running on port 8000.',
+            'Could not connect to the AI backend. Please try again.',
         },
         { status: 500 }
       )
@@ -209,12 +209,11 @@ export async function POST(request) {
         chapterIndex < aiCourse.chapters.length;
         chapterIndex++
       ) {
-        const chapter =
-          aiCourse.chapters[chapterIndex]
+        const chapter = aiCourse.chapters[chapterIndex]
 
-        // ------------------------------
+        // ==========================================
         // Save Chapter
-        // ------------------------------
+        // ==========================================
 
         const {
           data: savedChapter,
@@ -223,7 +222,9 @@ export async function POST(request) {
           .from('chapters')
           .insert({
             course_id: course.id,
-            title: chapter.title || `Chapter ${chapterIndex + 1}`,
+            title:
+              chapter.title ||
+              `Chapter ${chapterIndex + 1}`,
             order_index: chapterIndex + 1,
           })
           .select()
@@ -254,21 +255,20 @@ export async function POST(request) {
             const lesson =
               chapter.lessons[lessonIndex]
 
-            const {
-              error: lessonError,
-            } = await supabase
-              .from('lessons')
-              .insert({
-                chapter_id: savedChapter.id,
-                title:
-                  lesson.title ||
-                  `Lesson ${lessonIndex + 1}`,
-                content:
-                  lesson.content || '',
-                key_takeaways:
-                  lesson.key_takeaways || [],
-                order_index: lessonIndex + 1,
-              })
+            const { error: lessonError } =
+              await supabase
+                .from('lessons')
+                .insert({
+                  chapter_id: savedChapter.id,
+                  title:
+                    lesson.title ||
+                    `Lesson ${lessonIndex + 1}`,
+                  content:
+                    lesson.content || '',
+                  key_takeaways:
+                    lesson.key_takeaways || [],
+                  order_index: lessonIndex + 1,
+                })
 
             if (lessonError) {
               console.error(
@@ -295,31 +295,30 @@ export async function POST(request) {
             const quiz =
               chapter.quiz[quizIndex]
 
-            const {
-              error: quizError,
-            } = await supabase
-              .from('quizzes')
-              .insert({
-                chapter_id: savedChapter.id,
+            const { error: quizError } =
+              await supabase
+                .from('quizzes')
+                .insert({
+                  chapter_id: savedChapter.id,
 
-                question:
-                  quiz.question || '',
+                  question:
+                    quiz.question || '',
 
-                question_type:
-                  quiz.question_type || 'mcq',
+                  question_type:
+                    quiz.question_type || 'mcq',
 
-                options:
-                  quiz.options || [],
+                  options:
+                    quiz.options || [],
 
-                correct_answer:
-                  quiz.correct_answer || '',
+                  correct_answer:
+                    quiz.correct_answer || '',
 
-                explanation:
-                  quiz.explanation || '',
+                  explanation:
+                    quiz.explanation || '',
 
-                order_index:
-                  quizIndex + 1,
-              })
+                  order_index:
+                    quizIndex + 1,
+                })
 
             if (quizError) {
               console.error(
@@ -345,7 +344,9 @@ export async function POST(request) {
     console.error(
       '========== UPLOAD API ERROR =========='
     )
+
     console.error(error)
+
     console.error(
       '======================================'
     )
